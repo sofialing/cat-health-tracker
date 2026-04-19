@@ -17,16 +17,20 @@ function rowToLog(row: any): BreathingLog {
   };
 }
 
-export async function getBreathingLogs(catId: string): Promise<BreathingLog[]> {
+export async function getBreathingLogs(catId: string, limit?: number): Promise<BreathingLog[]> {
   const user = await getSessionUser();
   if (!user) return [];
   const supabase = await createClient();
-  const { data } = await supabase
+  let query = supabase
     .from("breathing_logs")
     .select("*")
     .eq("cat_id", catId)
     .eq("user_id", user.id)
     .order("date", { ascending: true });
+  
+  if (limit) query = query.limit(limit);
+  
+  const { data } = await query;
   return (data ?? []).map(rowToLog);
 }
 

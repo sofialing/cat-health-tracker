@@ -18,16 +18,20 @@ function rowToLog(row: any): WeightLog {
   };
 }
 
-export async function getWeightLogs(catId: string): Promise<WeightLog[]> {
+export async function getWeightLogs(catId: string, limit?: number): Promise<WeightLog[]> {
   const user = await getSessionUser();
   if (!user) return [];
   const supabase = await createClient();
-  const { data } = await supabase
+  let query = supabase
     .from("weight_logs")
     .select("*")
     .eq("cat_id", catId)
     .eq("user_id", user.id)
     .order("date", { ascending: true });
+  
+  if (limit) query = query.limit(limit);
+  
+  const { data } = await query;
   return (data ?? []).map(rowToLog);
 }
 
