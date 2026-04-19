@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getCatById } from "@/lib/actions/cats";
-import { getBreathingLogs } from "@/lib/actions/breathing";
 import { CatTabBar } from "@/components/cats/CatTabBar";
-import { BreathingChart } from "@/components/health/BreathingChart";
 import { BreathingLogForm } from "@/components/health/BreathingLogForm";
-import { BreathingLogList } from "@/components/health/BreathingLogList";
 import { Wind } from "lucide-react";
+import { BreathingSection } from "./breathing-section";
+import { ChartSkeleton } from "@/components/cats/SkeletonLoaders";
 
 export default async function BreathingPage({
   params,
@@ -15,8 +15,6 @@ export default async function BreathingPage({
   const { id } = await params;
   const cat = await getCatById(id);
   if (!cat) notFound();
-
-  const logs = (await getBreathingLogs(id)).slice().reverse();
 
   return (
     <>
@@ -32,9 +30,13 @@ export default async function BreathingPage({
       </header>
       <CatTabBar catId={id} />
       <div className="px-4 py-4 pb-20 lg:pb-6 space-y-6">
-        <BreathingChart logs={logs.slice().reverse()} />
+        {/* Form loads immediately (fast path) */}
         <BreathingLogForm catId={id} />
-        <BreathingLogList catId={id} logs={logs} />
+        
+        {/* Chart and list load in Suspense */}
+        <Suspense fallback={<ChartSkeleton />}>
+          <BreathingSection catId={id} />
+        </Suspense>
       </div>
     </>
   );

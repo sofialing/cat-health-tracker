@@ -1,39 +1,13 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { PlusCircle, Cat } from "lucide-react";
 import { getCats } from "@/lib/actions/cats";
-import { getWeightLogs } from "@/lib/actions/weight";
-import { getIncidents } from "@/lib/actions/incidents";
-import { getMedicalRecords } from "@/lib/actions/medical";
-import { CatCard } from "@/components/cats/CatCard";
+import { CatCardContainer } from "@/components/cats/CatCardContainer";
+import { CatCardSkeleton } from "@/components/cats/SkeletonLoaders";
 import { Button } from "@/components/ui/button";
 
 export default async function DashboardPage() {
   const cats = await getCats();
-
-  const catData = await Promise.all(
-    cats.map(async (cat) => {
-      const [weights, incidents, medicalRecords] = await Promise.all([
-        getWeightLogs(cat.id),
-        getIncidents(cat.id),
-        getMedicalRecords(cat.id),
-      ]);
-      const latestWeight = weights.at(-1);
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentIncidents = incidents.filter(
-        (i) => new Date(i.date) >= thirtyDaysAgo
-      ).length;
-      const nextVaccination = medicalRecords
-        .filter((r) => r.type === "vaccination" && r.nextDueDate)
-        .sort(
-          (a, b) =>
-            new Date(a.nextDueDate!).getTime() -
-            new Date(b.nextDueDate!).getTime()
-        )
-        .at(0);
-      return { cat, latestWeight, recentIncidents, nextVaccination };
-    })
-  );
 
   return (
     <div className="flex flex-col min-h-full">
@@ -47,17 +21,11 @@ export default async function DashboardPage() {
 
       <div className="flex-1 px-4 py-4 pb-20 lg:pb-6 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {catData.map(
-            ({ cat, latestWeight, recentIncidents, nextVaccination }) => (
-              <CatCard
-                key={cat.id}
-                cat={cat}
-                latestWeight={latestWeight}
-                recentIncidents={recentIncidents}
-                nextVaccination={nextVaccination}
-              />
-            )
-          )}
+          {cats.map((cat) => (
+            <Suspense key={cat.id} fallback={<CatCardSkeleton />}>
+              <CatCardContainer cat={cat} />
+            </Suspense>
+          ))}
         </div>
 
         {cats.length === 0 && (

@@ -1,12 +1,11 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getCatById } from "@/lib/actions/cats";
-import { getWeightLogs } from "@/lib/actions/weight";
 import { CatTabBar } from "@/components/cats/CatTabBar";
-import { WeightChart } from "@/components/health/WeightChart";
-import { LogList } from "@/components/health/LogList";
 import { WeightLogForm } from "@/components/health/WeightLogForm";
-import { formatWeight, formatDate } from "@/lib/utils";
 import { Scale } from "lucide-react";
+import { WeightSection } from "./weight-section";
+import { ChartSkeleton } from "@/components/cats/SkeletonLoaders";
 
 export default async function WeightPage({
   params,
@@ -16,8 +15,6 @@ export default async function WeightPage({
   const { id } = await params;
   const cat = await getCatById(id);
   if (!cat) notFound();
-
-  const logs = (await getWeightLogs(id)).slice().reverse();
 
   return (
     <>
@@ -33,17 +30,13 @@ export default async function WeightPage({
       </header>
       <CatTabBar catId={id} />
       <div className="px-4 py-4 pb-20 lg:pb-6 space-y-6">
-        <WeightChart logs={logs.slice().reverse()} unit={cat.weightUnit} />
+        {/* Form loads immediately (fast path) */}
         <WeightLogForm catId={id} unit={cat.weightUnit} />
-        <LogList
-          items={logs.map((log) => ({
-            id: log.id,
-            primary: formatWeight(log.weight, log.unit),
-            secondary: log.notes,
-            date: formatDate(log.date),
-          }))}
-          emptyMessage="No weight entries yet."
-        />
+        
+        {/* Chart and list load in Suspense */}
+        <Suspense fallback={<ChartSkeleton />}>
+          <WeightSection catId={id} unit={cat.weightUnit} />
+        </Suspense>
       </div>
     </>
   );

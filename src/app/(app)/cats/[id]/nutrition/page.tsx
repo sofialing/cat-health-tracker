@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getCatById } from "@/lib/actions/cats";
-import { getNutritionLogs } from "@/lib/actions/nutrition";
 import { CatTabBar } from "@/components/cats/CatTabBar";
 import { NutritionLogForm } from "@/components/health/NutritionLogForm";
-import { LogList } from "@/components/health/LogList";
-import { formatDate } from "@/lib/utils";
 import { ChefHat } from "lucide-react";
+import { NutritionSection } from "./nutrition-section";
+import { LogListSkeleton } from "@/components/cats/SkeletonLoaders";
 
 export default async function NutritionPage({
   params,
@@ -15,8 +15,6 @@ export default async function NutritionPage({
   const { id } = await params;
   const cat = await getCatById(id);
   if (!cat) notFound();
-
-  const logs = await getNutritionLogs(id);
 
   return (
     <>
@@ -32,22 +30,13 @@ export default async function NutritionPage({
       </header>
       <CatTabBar catId={id} />
       <div className="px-4 py-4 pb-20 lg:pb-6 space-y-6">
+        {/* Form loads immediately (fast path) */}
         <NutritionLogForm catId={id} />
-        <LogList
-          items={logs.map((log) => ({
-            id: log.id,
-            primary: `${log.brand ?? "Unknown brand"} · ${log.foodType}`,
-            secondary: [
-              log.dailyAmount ? `${log.dailyAmount}g/day` : null,
-              log.frequency,
-              log.notes,
-            ]
-              .filter(Boolean)
-              .join(" · "),
-            date: formatDate(log.date),
-          }))}
-          emptyMessage="No nutrition entries yet."
-        />
+        
+        {/* List loads in Suspense */}
+        <Suspense fallback={<LogListSkeleton />}>
+          <NutritionSection catId={id} />
+        </Suspense>
       </div>
     </>
   );

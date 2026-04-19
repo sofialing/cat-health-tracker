@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { TriangleAlert } from "lucide-react";
 import { getCatById } from "@/lib/actions/cats";
-import { getIncidents } from "@/lib/actions/incidents";
 import { CatTabBar } from "@/components/cats/CatTabBar";
 import { IncidentLogForm } from "@/components/health/IncidentLogForm";
-import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils";
+import { IncidentSection } from "./incidents-section";
+import { IncidentListSkeleton } from "@/components/cats/SkeletonLoaders";
 
 export default async function IncidentsPage({
   params,
@@ -15,8 +15,6 @@ export default async function IncidentsPage({
   const { id } = await params;
   const cat = await getCatById(id);
   if (!cat) notFound();
-
-  const incidents = await getIncidents(id);
 
   return (
     <>
@@ -32,43 +30,13 @@ export default async function IncidentsPage({
       </header>
       <CatTabBar catId={id} />
       <div className="px-4 py-4 pb-20 lg:pb-6 space-y-6">
+        {/* Form loads immediately (fast path) */}
         <IncidentLogForm catId={id} />
 
-        <div className="space-y-3">
-          {incidents.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No incidents logged.
-            </p>
-          )}
-          {incidents.map((incident) => (
-            <div
-              key={incident.id}
-              className="p-4 rounded-xl border bg-card space-y-2"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-medium capitalize">{incident.type}</span>
-                <Badge
-                  variant={
-                    incident.severity === "high"
-                      ? "destructive"
-                      : incident.severity === "medium"
-                        ? "default"
-                        : "secondary"
-                  }
-                  className="capitalize"
-                >
-                  {incident.severity}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {incident.description}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {formatDate(incident.date)}
-              </p>
-            </div>
-          ))}
-        </div>
+        {/* List loads in Suspense */}
+        <Suspense fallback={<IncidentListSkeleton />}>
+          <IncidentSection catId={id} />
+        </Suspense>
       </div>
     </>
   );
