@@ -1,4 +1,4 @@
-const CACHE_NAME = "cat-health-tracker-v1.0.0";
+const CACHE_NAME = "cat-health-tracker-v1.1.0";
 const urlsToCache = [
   "/",
   "/manifest.json",
@@ -25,6 +25,31 @@ self.addEventListener("fetch", (event) => {
   // Only cache GET requests
   if (event.request.method !== "GET") return;
 
+  const url = new URL(event.request.url);
+
+  // Network-first strategy for API calls (data that changes frequently)
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(
+      fetch(event.request)
+        .then((fetchResponse) => {
+          // Cache successful API responses
+          if (fetchResponse.ok) {
+            const responseClone = fetchResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return fetchResponse;
+        })
+        .catch(() => {
+          // Fall back to cache if network fails
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // Cache-first strategy for static assets
   event.respondWith(
     caches.match(event.request).then((response) => {
       // Return cached version or fetch from network
