@@ -1,7 +1,8 @@
-import type { Metadata, Viewport } from "next";
-import { Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Geist_Mono } from "next/font/google";
 import { PWA } from "@/components/PWA";
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import type { Metadata, Viewport } from "next";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <PWA />
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
