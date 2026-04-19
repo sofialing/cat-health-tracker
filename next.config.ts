@@ -1,3 +1,4 @@
+import nextPWA from "@ducanh2912/next-pwa";
 import type { NextConfig } from "next";
 
 const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -17,6 +18,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  turbopack: {},
 };
 
-export default nextConfig;
+export default nextPWA({
+  dest: "public",
+  register: true,
+  disable: process.env.NODE_ENV === "development",
+})(nextConfig);
