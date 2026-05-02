@@ -60,7 +60,7 @@ create table if not exists incidents (
   id uuid primary key default gen_random_uuid(),
   cat_id uuid references cats(id) on delete cascade not null,
   user_id uuid references auth.users(id) on delete cascade not null,
-  type text not null check (type in ('vomiting', 'symptom', 'illness')),
+  type text not null check (type in ('vomiting', 'symptom', 'illness', 'cough')),
   description text not null,
   severity text not null check (severity in ('low', 'medium', 'high')),
   date date not null,

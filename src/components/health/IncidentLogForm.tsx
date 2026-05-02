@@ -63,6 +63,7 @@ export function IncidentLogForm({ catId }: { catId: string }) {
                   <SelectItem value="vomiting">Vomiting</SelectItem>
                   <SelectItem value="symptom">Symptom</SelectItem>
                   <SelectItem value="illness">Illness</SelectItem>
+                  <SelectItem value="cough">Cough</SelectItem>
                 </SelectContent>
               </Select>
             </div>

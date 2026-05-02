@@ -34,7 +34,7 @@ export interface NutritionLog {
 export interface Incident {
   id: string;
   catId: string;
-  type: "vomiting" | "symptom" | "illness";
+  type: "vomiting" | "symptom" | "illness" | "cough";
   description: string;
   severity: "low" | "medium" | "high";
   date: string;
