@@ -52,6 +52,30 @@ export async function createIncident(
   revalidatePath("/");
 }
 
+export async function updateIncident(
+  catId: string,
+  incidentId: string,
+  data: FormData
+): Promise<void> {
+  const user = await getSessionUser();
+  if (!user) throw new Error("Unauthenticated");
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("incidents")
+    .update({
+      type: data.get("type") as string,
+      description: data.get("description") as string,
+      severity: data.get("severity") as string,
+      date: data.get("date") as string,
+    })
+    .eq("id", incidentId)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/cats/${catId}/incidents`);
+  revalidatePath(`/cats/${catId}`);
+  revalidatePath("/");
+}
+
 export async function deleteIncident(
   catId: string,
   incidentId: string
@@ -66,4 +90,6 @@ export async function deleteIncident(
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath(`/cats/${catId}/incidents`);
+  revalidatePath(`/cats/${catId}`);
+  revalidatePath("/");
 }
